@@ -4,6 +4,7 @@
         <span>Tasks </span>
         <span>{{tasksCount}}</span>
     </div>
+    {{tasks}}
     <div>
       <input class="form-input" type="text" v-model="task" placeholder="New Tasks"/>
       <button class="btn" @click="addTask(task)">
@@ -11,16 +12,15 @@
         <span>Add</span>
       </button>
     </div>
-   
     <div class="todo-list">
       <ul v-for="(taskItem, index) in tasks" :key="taskItem">
-        <div>
+        <div
+          @click="toggleStatus(taskItem, index)"
+         
+        >
+        {{task.color}}
           <li class="form-li"
-             @click="toggleStatus(taskItem, index)"
-             :class="{
-                'green-bg' : isCompleted[index],
-                'grey-bg' : !isCompleted[index]
-              }"
+             :class="taskItem.color"
           >
             <span>
               {{taskItem.title}}
@@ -40,12 +40,12 @@ export default {
   computed:{
     tasksCount(){
       return (this.tasks && this.tasks.length > 0)? this.tasks.length - 1 : 0;
-    },
+    }
   },
   data() {
     return {
       task: '',
-      tasks: [],
+      tasks: this.getTaskCookie() || [],
       isCompleted: []
     }
   },
@@ -53,8 +53,10 @@ export default {
     addTask(taskItem) {
       let  taskObj = {
         title: taskItem,
-        status: "incomplete"
+        status: "incomplete",
+        color: "grey-bg"
       }
+      console.log("taskType",this.tasks);
       this.tasks.push(taskObj);
       let tempTasksObj = Object.assign({}, this.tasks);
       console.log(tempTasksObj);
@@ -67,21 +69,26 @@ export default {
       let tempTasksObj = Object.assign({}, this.tasks);
       this.SetTasksInCookie(tempTasksObj);
     },
-    toggleStatus(task, index){
+    toggleStatus(task){
       task.status = ( task.status === "incomplete")? "completed" : "incomplete";
-      this.isCompleted[index] = (task.status === "completed");
+      task.color = (task.status === "completed") ? 'green-bg' : 'grey-bg';
       let tempTasksObj = Object.assign({}, this.tasks);
       console.log(tempTasksObj);
       this.SetTasksInCookie(tempTasksObj);
     },
     SetTasksInCookie(obj) {
+      console.log("obj", obj);
       let cookieTaskStr = JSON.stringify(obj);
       document.cookie = "tasks=";
       document.cookie = "tasks="+ cookieTaskStr;
+    },
+    getTaskCookie(){
+      let cookieStr = ('; '+document.cookie).split(`; tasks=`).pop().split(';')[0];
+      return (cookieStr) ? JSON.parse(cookieStr) : [];
     }
   },
   mounted() {
-    this.tasks = document.cookie("tasks") || [];
+    this.tasks = this.getTaskCookie() || [];
   }
 }
 </script>
